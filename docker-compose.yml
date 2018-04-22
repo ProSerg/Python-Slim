@@ -1,0 +1,38 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7.21
+    environment:
+      MYSQL_DATABASE: jirobot
+      MYSQL_ROOT_PASSWORD: dev
+    volumes:
+      - mysql_data:/var/lib/mysql/
+      - ./backup/:/backup/
+      - ./docker/mysql/conf.d/mysql_dev.cnf:/etc/mysql/conf.d/mysql_dev.cnf:ro
+    ports:
+      - ${PROJECT_ID}06:3306
+  redis:
+    image: redis:3.0
+  env:
+    image: jirobot/env:latest
+    links:
+      - db
+      - redis
+    volumes:
+      - ./code/:/code/
+      - pycharm_helpers:/root/.pycharm_helpers/
+      - static:/static/
+    working_dir: /code
+    ports:
+      # ./manage.py runserver 0.0.0.0:8211 --settings jirobot.settings
+      - ${PROJECT_ID}11:${PROJECT_ID}11
+      # ports range for LiveServerTestCase (Selenium tests):
+      - ${PROJECT_ID}13-${PROJECT_ID}18:${PROJECT_ID}13-${PROJECT_ID}18
+      # ssh
+      - ${PROJECT_ID}22:${PROJECT_ID}22
+    command: /usr/sbin/sshd -D
+
+volumes:
+  pycharm_helpers:
+  mysql_data:
+  static:
